@@ -1,0 +1,42 @@
+Provide a user-space application for multiplexing traffic from multiple
+ports across an IP tunnel on another port.
+
+How To Use:
+-----------
+consider this example:
+
+Machine A is the border machine. we want to capsulate and forward 
+traffic from eth1 to machineB which in turn decapsulates the traffic
+and forwards it to virtual port tap1. Trafic from eth2 on machineA
+will be encapsulated and forwarded to machineC which in turn will be
+decapsulated and forwarded to tap0. note that the tunnels are 
+bidirectinonal.
+
+  |eth1  |eth2
+-------------		    eth0 ------------- 
+| Machine A | ------------------ | Machine B |
+-------------| eth0              -------------
+	     |			       |output to tap port tap1
+	     |			       |
+	     |eth0
+	------------
+	| Machine C |
+	-------------
+	     |output to tap port tap0
+	     |
+
+Here are the commands that should run on these machines:
+
+on MachineA:
+./capsulator -f machineB_ip_addr, machineC_ip_addr -t eth0 -b eth1#20 -b 
+eth2#21
+[ Note that order of writing IP addresses in -f is the same as order of listing
+  border ports (-b/-vb), ie. machineB receives eth1 traffic, hence the order 
+  above]
+
+on MachineB:
+./capsulator -f machineA_ip_addr -t eth0 -vb tap1#20
+
+on MachineC:
+./capsulator -f machineA_ip_addr -t eth0 -vb tap0#21
+
